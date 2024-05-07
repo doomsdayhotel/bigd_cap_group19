@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 '''Starter Pyspark Script for students to complete for their Lab 3 Assignment.
 Usage:
-    $ spark-submit lab_3_starter_code.py
-    $ spark-submit minHash.py ./ml-latest-small/ratings.csv
     $ spark-submit --deploy-mode client minHash.py ./ml-latest-small/ratings.csv
 '''
 import os
@@ -37,9 +35,9 @@ def main(spark, userID):
 
     # 1. Preprocessing Data 
     # Load the ratings.csv into DataFrame
-    # ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ratings.csv')
+    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ratings.csv', header=True, inferSchema=True)
     
-    ratings_df = spark.read.csv("/Users/lvxinyuan/me/1-Projects/NYU/1-Courses/24_Spring_Big Data/hw/capstone-project-cap-19/ml-latest-small/ratings.csv", header=True, inferSchema=True)
+    # ratings_df = spark.read.csv("/Users/lvxinyuan/me/1-Projects/NYU/1-Courses/24_Spring_Big Data/hw/capstone-project-cap-19/ml-latest-small/ratings.csv")
 
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
