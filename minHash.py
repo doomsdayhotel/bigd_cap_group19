@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''Starter Pyspark Script for students to complete for their Lab 3 Assignment.
+'''
 Usage:
     $ spark-submit --deploy-mode client minHash.py ./ml-latest-small/ratings.csv
 '''
@@ -20,7 +20,7 @@ def to_sparse_vector(movie_ids, total_movies):
     1. indices need to start from 0
     2. indices need to be in a sorted order
     '''
-    indices = [id for id in movie_ids] #sorted([id for id in movie_ids])
+    indices = sorted([unique_movie_ids.index(id) for id in movie_ids])
     values = [1.0] * len(indices)
     return Vectors.sparse(total_movies, indices, values)
 
@@ -45,6 +45,7 @@ def main(spark, userID):
     ratings_df_grouped.show()
 
     # Get all unique movieIds
+    unique_movie_ids = sorted(ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect())
     total_movies = ratings_df.select("movieId").distinct().count() #9724
 
     # Create UDF with total_movies bound
