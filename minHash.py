@@ -85,7 +85,7 @@ def main(spark, userID):
     sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
     top_100_pairs = sorted_pairs.limit(100)
     top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
-
+    top_100_pairs.printSchema()
     top_100_pairs.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_pairs.csv', header=True, mode="overwrite")
     
 
