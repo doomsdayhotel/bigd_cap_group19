@@ -50,8 +50,6 @@ def main(spark, userID):
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
     total_movies = len(unique_movie_ids) #9724
-    movie_id_to_index = {movie_id: idx for idx, movie_id in enumerate(unique_movie_ids)}
-    print(movie_id_to_index)
 
     # Create UDF with total_movies bound
     to_sparse_vector_udf = udf(lambda ids: to_sparse_vector(ids, total_movies), VectorUDT())
@@ -59,7 +57,7 @@ def main(spark, userID):
     # Preping the Sparse Vector
 
     ratings_df_final = ratings_df_grouped.withColumn("features", to_sparse_vector_udf("movieIds"))
-    # ratings_df_final.show()
+    ratings_df_final.show()
 
     ## 2. Applying MinHash
 
