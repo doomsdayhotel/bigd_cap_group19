@@ -35,7 +35,7 @@ def main(spark, userID):
 
     # 1. Preprocessing Data 
     # Load the ratings.csv into DataFrame
-    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ratings.csv', header=True, inferSchema=True)
+    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
     
     # ratings_df = spark.read.csv("/Users/lvxinyuan/me/1-Projects/NYU/1-Courses/24_Spring_Big Data/hw/capstone-project-cap-19/ml-latest-small/ratings.csv")
 
