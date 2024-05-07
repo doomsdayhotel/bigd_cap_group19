@@ -52,14 +52,14 @@ def main(spark, userID):
     ratings_with_index_df = ratings_df.join(movie_id_index_df, on="movieId", how="left")
 
     # ratings_with_index_df.show()
-    ratings_with_index_df.write.csv('hdfs:/user/{userID}/ml-latest-small/results', header=True, mode="overwrite")
+    ratings_with_index_df.write.csv('hdfs:/user/{userID}/ml-latest-small', header=True, mode="overwrite")
 
     
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_with_index_df.groupBy("userId").agg(collect_list("newIndex").alias("movieIds"))
     # Show the transformed DataFrame
     # ratings_df_grouped.show()
-    ratings_df_grouped.write.csv('hdfs:/user/{userID}/ml-latest-small/results', header=True, mode="overwrite")
+    ratings_df_grouped.write.csv('hdfs:/user/{userID}/ml-latest-small', header=True, mode="overwrite")
     
 
     
@@ -71,7 +71,7 @@ def main(spark, userID):
 
     ratings_df_final = ratings_df_grouped.withColumn("features", to_sparse_vector_udf("movieIds"))
     # ratings_df_final.show()
-    ratings_df_final.write.csv('hdfs:/user/{userID}/ml-latest-small/results', header=True, mode="overwrite")
+    ratings_df_final.write.csv('hdfs:/user/{userID}/ml-latest-small', header=True, mode="overwrite")
 
     ''' 2. Applying MinHash '''
     mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
@@ -86,7 +86,7 @@ def main(spark, userID):
     top_100_pairs = sorted_pairs.limit(100)
     top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show()
 
-    top_100_pairs.write.csv('hdfs:/user/{userID}/ml-latest-small/results', header=True, mode="overwrite")
+    top_100_pairs.write.csv('hdfs:/user/{userID}/ml-latest-small', header=True, mode="overwrite")
     
 
 
