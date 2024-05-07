@@ -51,7 +51,7 @@ def main(spark, userID):
     # Join the original DataFrame with the index DataFrame
     ratings_with_index_df = ratings_df.join(movie_id_index_df, on="movieId", how="left")
 
-    ratings_with_index_df.show()
+    ratings_with_index_df.show(9724)
     ratings_with_index_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_with_index.csv', header=True, mode="overwrite")
 
     
@@ -84,9 +84,9 @@ def main(spark, userID):
     similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
     sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=False)
     top_100_pairs = sorted_pairs.limit(100)
-    top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show()
+    top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
 
-    top_100_pairs.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_pairs.csv', header=True, mode="overwrite")
+    # top_100_pairs.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_pairs.csv', header=True, mode="overwrite")
     
 
 
