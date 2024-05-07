@@ -13,14 +13,14 @@ from pyspark.sql.functions import collect_list, udf, col
 from pyspark.sql import Row
 from pyspark.sql.types import IntegerType
 
-def to_sparse_vector(movie_ids, total_movies, movie_id_to_index):
+def to_sparse_vector(movie_ids, total_movies):
     '''
     Notes
     1. indices need to start from 0
     2. indices need to be in a sorted order
     '''
 
-    indices = sorted([movie_id_to_index[id]for id in movie_ids if id in movie_id_to_index])
+    indices = sorted(id for id in movie_ids)
     values = [1.0] * len(indices)
     return Vectors.sparse(total_movies, indices, values)
 
@@ -47,7 +47,7 @@ def main(spark, userID):
     movie_id_to_index = {movie_id: idx for idx, movie_id in enumerate(unique_movie_ids)}
 
     # Convert the dictionary into a DataFrame
-    movie_id_index_df = spark.createDataFrame(movie_id_to_index.items(), ["movieId", "index"])
+    movie_id_index_df = spark.createDataFrame(movie_id_to_index.items(), ["movieId", "newIndex"])
 
     # Join the original DataFrame with the index DataFrame
     ratings_with_index_df = ratings_df.join(movie_id_index_df, on="movieId", how="left")
@@ -56,9 +56,9 @@ def main(spark, userID):
 
     
     # Group by userId and collect all movieIds into a list
-    ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
+    ratings_df_grouped = ratings_with_index_df.groupBy("userId").agg(collect_list("newIndex").alias("movieIds"))
     # Show the transformed DataFrame
-    # ratings_df_grouped.show()
+    ratings_df_grouped.show()
 
     
 
