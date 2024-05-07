@@ -9,9 +9,8 @@ import os
 # And pyspark.sql to get the spark session
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.sql.functions import collect_list, udf, col
-from pyspark.sql import Row
-from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import collect_list, udf
+from pyspark.ml.feature import MinHashLSH
 
 def to_sparse_vector(movie_ids, total_movies):
     '''
@@ -33,7 +32,7 @@ def main(spark, userID):
     userID : string, userID of student to find files in HDFS
     '''
 
-    # 1. Preprocessing Data 
+    '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
     
@@ -70,7 +69,23 @@ def main(spark, userID):
     ratings_df_final = ratings_df_grouped.withColumn("features", to_sparse_vector_udf("movieIds"))
     ratings_df_final.show()
 
-    ## 2. Applying MinHash
+    ''' 2. Applying MinHash '''
+    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
+    model = mh.fit(ratings_df_final)
+
+
+    transformed_df = model.transform(ratings_df_final)
+    similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
+
+    similar_pairs = similar_pairs.filter("datasetA.id < datasetB.id")  # Avoid duplicates and self-pairs
+    sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
+    top_100_pairs = sorted_pairs.limit(100)
+    top_100_pairs.select("datasetA.id", "datasetB.id", "JaccardDistance").show()
+
+
+
+
+
 
 
 # Only enter this block if we're in main
