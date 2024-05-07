@@ -34,7 +34,7 @@ def main(spark, userID):
 
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
+    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest/ratings.csv', header=True, inferSchema=True)
     
     # ratings_df = spark.read.csv("/Users/lvxinyuan/me/1-Projects/NYU/1-Courses/24_Spring_Big Data/hw/capstone-project-cap-19/ml-latest-small/ratings.csv")
 
@@ -93,7 +93,7 @@ def main(spark, userID):
         "JaccardDistance"
     )
     # Write the simplified DataFrame to CSV
-    simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_simplified_pairs.csv', header=True, mode="overwrite")
+    simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_simplified_pairs.csv', header=True, mode="overwrite")
 
     
 
