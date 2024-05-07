@@ -9,7 +9,7 @@ import os
 # And pyspark.sql to get the spark session
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.sql.functions import collect_list, udf
+from pyspark.sql.functions import collect_list, udf, col
 from pyspark.ml.feature import MinHashLSH
 
 def to_sparse_vector(movie_ids, total_movies):
@@ -85,8 +85,16 @@ def main(spark, userID):
     sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
     top_100_pairs = sorted_pairs.limit(100)
     top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
-    top_100_pairs.printSchema()
-    top_100_pairs.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_pairs.csv', header=True, mode="overwrite")
+    # top_100_pairs.printSchema()
+
+    simplified_df = top_100_pairs.select(
+        col("datasetA.userId").alias("userIdA"),
+        col("datasetB.userId").alias("userIdB"),
+        "JaccardDistance"
+    )
+    # Write the simplified DataFrame to CSV
+    simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_simplified_pairs.csv', header=True, mode="overwrite")
+
     
 
 
