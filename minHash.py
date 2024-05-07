@@ -14,13 +14,16 @@ from pyspark.sql import Row
 from pyspark.sql.functions import udf
 from pyspark.ml.linalg import Vectors, VectorUDT
 
-def to_sparse_vector(movie_ids, total_movies):
+def to_sparse_vector(movie_ids, total_movies, unique_movie_ids):
     '''
     Notes
     1. indices need to start from 0
     2. indices need to be in a sorted order
     '''
-    indices = sorted([unique_movie_ids.index(id) for id in movie_ids])
+    # Create a dictionary for quick index lookup
+    movie_id_to_index = {movie_id: idx for idx, movie_id in enumerate(unique_movie_ids)}
+
+    indices = sorted([movie_id_to_index[id]for id in movie_ids if id in movie_id_to_index])
     values = [1.0] * len(indices)
     return Vectors.sparse(total_movies, indices, values)
 
@@ -45,8 +48,10 @@ def main(spark, userID):
     ratings_df_grouped.show()
 
     # Get all unique movieIds
-    unique_movie_ids = sorted(ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect())
-    total_movies = ratings_df.select("movieId").distinct().count() #9724
+    unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
+    total_movies = len(unique_movie_ids) #9724
+    movie_id_to_index = {movie_id: idx for idx, movie_id in enumerate(unique_movie_ids)}
+    print(movie_id_to_index)
 
     # Create UDF with total_movies bound
     to_sparse_vector_udf = udf(lambda ids: to_sparse_vector(ids, total_movies), VectorUDT())
@@ -54,7 +59,7 @@ def main(spark, userID):
     # Preping the Sparse Vector
 
     ratings_df_final = ratings_df_grouped.withColumn("features", to_sparse_vector_udf("movieIds"))
-    ratings_df_final.show()
+    # ratings_df_final.show()
 
     ## 2. Applying MinHash
 
