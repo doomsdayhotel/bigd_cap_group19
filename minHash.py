@@ -77,10 +77,10 @@ def main(spark, userID):
     transformed_df = model.transform(ratings_df_final)
     similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
 
-    similar_pairs = similar_pairs.filter("datasetA.id < datasetB.id")  # Avoid duplicates and self-pairs
+    similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
     sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
     top_100_pairs = sorted_pairs.limit(100)
-    top_100_pairs.select("datasetA.id", "datasetB.id", "JaccardDistance").show()
+    top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show()
 
 
 
