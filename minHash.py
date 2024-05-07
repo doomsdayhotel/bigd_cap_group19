@@ -84,7 +84,7 @@ def main(spark, userID):
     similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
     sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
     top_100_pairs = sorted_pairs.limit(100)
-    top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
+    # top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
     # top_100_pairs.printSchema()
 
     simplified_df = top_100_pairs.select(
@@ -96,12 +96,6 @@ def main(spark, userID):
     simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_simplified_pairs.csv', header=True, mode="overwrite")
 
     
-
-
-
-
-
-
 
 # Only enter this block if we're in main
 if __name__ == "__main__":
