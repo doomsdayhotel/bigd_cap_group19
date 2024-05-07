@@ -51,15 +51,15 @@ def main(spark, userID):
     # Join the original DataFrame with the index DataFrame
     ratings_with_index_df = ratings_df.join(movie_id_index_df, on="movieId", how="left")
 
-    # ratings_with_index_df.show()
+    ratings_with_index_df.show()
     ratings_with_index_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_with_index.csv', header=True, mode="overwrite")
 
     
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_with_index_df.groupBy("userId").agg(collect_list("newIndex").alias("movieIds"))
     # Show the transformed DataFrame
-    # ratings_df_grouped.show()
-    ratings_df_grouped.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_grouped.csv', header=True, mode="overwrite")
+    ratings_df_grouped.show()
+    # ratings_df_grouped.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_grouped.csv', header=True, mode="overwrite")
     
 
     
@@ -70,8 +70,8 @@ def main(spark, userID):
     # Preping the Sparse Vector
 
     ratings_df_final = ratings_df_grouped.withColumn("features", to_sparse_vector_udf("movieIds"))
-    # ratings_df_final.show()
-    ratings_df_final.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_final.csv', header=True, mode="overwrite")
+    ratings_df_final.show()
+    # ratings_df_final.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_final.csv', header=True, mode="overwrite")
 
     ''' 2. Applying MinHash '''
     mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
