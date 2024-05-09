@@ -50,7 +50,8 @@ def main(spark, userID):
     
     # Vectorize moviIds
     cv = CountVectorizer(inputCol = 'movieIds', outputCol = 'features')
-    ratings_df_final = cv.fit(ratings_df_grouped)
+    model = cv.fit(ratings_df_grouped)
+    ratings_df_final = model.transform(ratings_df_grouped)
     ratings_df_final.show()
     # ratings_df_final.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_final.csv', header=True, mode="overwrite")
     '''
@@ -64,7 +65,7 @@ def main(spark, userID):
     '''
 
     ''' 2. Applying MinHash '''
-    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
+    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=5)
     model = mh.fit(ratings_df_final)
 
 
