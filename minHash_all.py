@@ -76,7 +76,7 @@ def main(spark, userID):
 
     print("Write simplified df to CSV\n")
     # Write the simplified DataFrame to CSV
-    simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_pairs_all', header=True, mode="overwrite")
+    simplified_df.write.partitionBy("userIdA").parquet('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_pairs_all', header=True, mode="overwrite")
 
     
 
