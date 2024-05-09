@@ -58,19 +58,23 @@ def main(spark, userID):
     mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=1)
     model = mh.fit(ratings_df_final)
 
-
+    print("Transformed Data\n")
     transformed_df = model.transform(ratings_df_final)
     similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
 
+    print("100 similarity pairs\n")
     similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId").orderBy("JaccardDistance", ascending=True).limit(100)
     # top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
     # top_100_pairs.printSchema()
 
+    print("Simplified df\n")
     simplified_df = similar_pairs.select(
         col("datasetA.userId").alias("userIdA"),
         col("datasetB.userId").alias("userIdB"),
         "JaccardDistance"
     )
+
+    print("Write simplified df to CSV\n")
     # Write the simplified DataFrame to CSV
     simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_pairs_all', header=True, mode="overwrite")
 
