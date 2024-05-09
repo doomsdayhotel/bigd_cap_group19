@@ -56,6 +56,7 @@ def main(spark, userID):
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
     total_movies = movies_df.agg(max("movieId")).collect()[0][0]
+    total_movies = total_movies + 1
     print(total_movies) #193609
 
     
