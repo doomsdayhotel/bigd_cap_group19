@@ -24,7 +24,7 @@ def main(spark, userID):
 
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', schema='movieId STRING, title STRING, genres STRING')
+    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
 
     # Get all unique movieIds
     # unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
