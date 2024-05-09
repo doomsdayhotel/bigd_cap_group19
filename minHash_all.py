@@ -24,7 +24,7 @@ def main(spark, userID):
 
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
+    ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
     
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
