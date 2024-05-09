@@ -20,7 +20,7 @@ def to_sparse_vector(movie_ids, total_movies):
     2. indices need to be in a sorted order
     '''
 
-    indices = [id-1 for id in movie_ids]
+    indices = sorted(movie_ids)
     values = [1.0] * len(indices)
     return Vectors.sparse(total_movies, indices, values)
 
@@ -56,7 +56,7 @@ def main(spark, userID):
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
     total_movies = movies_df.agg(max("movieId")).collect()[0][0]
-    print(total_movies)
+    print(total_movies) #193609
 
     
     # Group by userId and collect all movieIds into a list
