@@ -56,10 +56,11 @@ def main(spark, userID):
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
     total_movies = movies_df.agg(max("movieId")).collect()[0][0]
+    print(total_movies)
 
     
     # Group by userId and collect all movieIds into a list
-    ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("newIndex").alias("movieIds"))
+    ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
     # Show the transformed DataFrame
     ratings_df_grouped.show()
     # ratings_df_grouped.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_grouped.csv', header=True, mode="overwrite")
@@ -75,26 +76,26 @@ def main(spark, userID):
     # ratings_df_final.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_final.csv', header=True, mode="overwrite")
 
     ''' 2. Applying MinHash '''
-    # mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
-    # model = mh.fit(ratings_df_final)
+    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=10)
+    model = mh.fit(ratings_df_final)
 
 
-    # transformed_df = model.transform(ratings_df_final)
-    # similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
+    transformed_df = model.transform(ratings_df_final)
+    similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
 
-    # similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
-    # sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
-    # top_100_pairs = sorted_pairs.limit(100)
-    # # top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
-    # # top_100_pairs.printSchema()
+    similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
+    sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
+    top_100_pairs = sorted_pairs.limit(100)
+    # top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
+    # top_100_pairs.printSchema()
 
-    # simplified_df = top_100_pairs.select(
-    #     col("datasetA.userId").alias("userIdA"),
-    #     col("datasetB.userId").alias("userIdB"),
-    #     "JaccardDistance"
-    # )
-    # # Write the simplified DataFrame to CSV
-    # simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_simplified_pairs.csv', header=True, mode="overwrite")
+    simplified_df = top_100_pairs.select(
+        col("datasetA.userId").alias("userIdA"),
+        col("datasetB.userId").alias("userIdB"),
+        "JaccardDistance"
+    )
+    # Write the simplified DataFrame to CSV
+    simplified_df.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/top_100_pairs2.csv', header=True, mode="overwrite")
 
     
 
