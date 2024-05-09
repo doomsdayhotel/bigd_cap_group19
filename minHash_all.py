@@ -27,8 +27,8 @@ def main(spark, userID):
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
     
     # Group by userId and collect all movieIds into a list
-    ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
-    ratings_df_grouped.show()
+    ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds")).cache()
+    # ratings_df_grouped.show()
     '''
     +------+--------------------+
     |userId|            movieIds|
@@ -43,7 +43,7 @@ def main(spark, userID):
     cv = CountVectorizer(inputCol = 'movieIds', outputCol = 'features')
     model = cv.fit(ratings_df_grouped)
     ratings_df_final = model.transform(ratings_df_grouped)
-    ratings_df_final.show()
+    # ratings_df_final.show()
     '''
     +------+--------------------+--------------------+
     |userId|            movieIds|            features|
@@ -62,13 +62,11 @@ def main(spark, userID):
     transformed_df = model.transform(ratings_df_final)
     similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
 
-    similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId")  # Avoid duplicates and self-pairs
-    sorted_pairs = similar_pairs.orderBy("JaccardDistance", ascending=True)
-    top_100_pairs = sorted_pairs.limit(100)
+    similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId").orderBy("JaccardDistance", ascending=True).limit(100)
     # top_100_pairs.select("datasetA.userId", "datasetB.userId", "JaccardDistance").show(100)
     # top_100_pairs.printSchema()
 
-    simplified_df = top_100_pairs.select(
+    simplified_df = similar_pairs.select(
         col("datasetA.userId").alias("userIdA"),
         col("datasetB.userId").alias("userIdB"),
         "JaccardDistance"
