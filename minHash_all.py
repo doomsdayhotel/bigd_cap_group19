@@ -25,19 +25,10 @@ def main(spark, userID):
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
-
-    # Get all unique movieIds
-    # unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
-    # total_movies = movies_df.agg(max("movieId")).collect()[0][0]
-    # total_movies = total_movies + 1
-    # print(total_movies) #193609
-
     
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds"))
-    # Show the transformed DataFrame
     ratings_df_grouped.show()
-    # ratings_df_grouped.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_grouped.csv', header=True, mode="overwrite")
     '''
     +------+--------------------+
     |userId|            movieIds|
@@ -53,14 +44,13 @@ def main(spark, userID):
     model = cv.fit(ratings_df_grouped)
     ratings_df_final = model.transform(ratings_df_grouped)
     ratings_df_final.show()
-    # ratings_df_final.write.csv('hdfs:/user/hl5679_nyu_edu/ml-latest-small/ratings_df_final.csv', header=True, mode="overwrite")
     '''
     +------+--------------------+--------------------+
     |userId|            movieIds|            features|
     +------+--------------------+--------------------+
-    |   148|[356, 1197, 4308,...|(193610,[356,1197...|
-    |   463|[110, 296, 356, 5...|(193610,[110,296,...|
-    |   471|[1, 296, 356, 527...|(193610,[1,296,35...|
+    |   148|[356, 1197, 4308,...|(9725,[0,19,25,26...|
+    |   463|[110, 296, 356, 5...|(9725,[0,2,7,9,16...|
+    |   471|[1, 296, 356, 527...|(9725,[0,2,4,9,10...|
     +------+--------------------+--------------------+
     '''
 
