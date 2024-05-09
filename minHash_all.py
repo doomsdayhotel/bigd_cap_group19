@@ -25,9 +25,13 @@ def main(spark, userID):
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest/ratings.csv', schema='userId INT, movieId STRING, rating FLOAT, timestamp BIGINT')
+
+    ratings_df.cache() #Cache for optimizing
     
     # Group by userId and collect all movieIds into a list
     ratings_df_grouped = ratings_df.groupBy("userId").agg(collect_list("movieId").alias("movieIds")).cache()
+    ratings_df_grouped = ratings_df_grouped.repartition("userId")
+    ratings_df_grouped.cache() #Cache for optimizing
     # ratings_df_grouped.show()
     '''
     +------+--------------------+
@@ -84,7 +88,21 @@ def main(spark, userID):
 if __name__ == "__main__":
 
     # Create the spark session object
-    spark = SparkSession.builder.appName('minHash').getOrCreate()
+    # spark = SparkSession.builder.appName('minHash').getOrCreate()
+
+    spark = SparkSession.builder \
+    .appName('minHash') \
+    .config('spark.executor.memory', '4g') \
+    .config('spark.driver.memory', '4g') \
+    .config('spark.executor.instances', '10') \
+    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+    .config("spark.memory.offHeap.enabled", "true") \
+    .config("spark.memory.offHeap.size", "2g") \
+    .config("spark.dynamicAllocation.enabled", "true") \
+    .config("spark.dynamicAllocation.minExecutors", "1") \
+    .config("spark.dynamicAllocation.maxExecutors", "20") \
+    .config("spark.shuffle.service.enabled", "true") \
+    .getOrCreate()
 
     # Get user userID from the command line
     # We need this to access the user's folder in HDFS
