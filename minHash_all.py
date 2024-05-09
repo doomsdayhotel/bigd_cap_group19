@@ -65,6 +65,8 @@ def main(spark, userID):
     print("Transformed Data\n")
     transformed_df = model.transform(ratings_df_final)
     similar_pairs = model.approxSimilarityJoin(transformed_df, transformed_df, 0.6, distCol="JaccardDistance")
+    similar_pairs.cache()
+    simplified_df.write.partitionBy("userIdA").parquet('hdfs:/user/hl5679_nyu_edu/ml-latest/pairs_all')
 
     print("100 similarity pairs\n")
     similar_pairs = similar_pairs.filter("datasetA.userId < datasetB.userId").orderBy("JaccardDistance", ascending=True).limit(100)
@@ -77,8 +79,6 @@ def main(spark, userID):
         col("datasetB.userId").alias("userIdB"),
         "JaccardDistance"
     )
-
-    simplified_df.show(100)
 
     print("Write simplified df to CSV\n")
     # Write the simplified DataFrame to CSV
