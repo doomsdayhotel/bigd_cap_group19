@@ -38,9 +38,12 @@ def main(spark, userID):
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
     movies_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/movies.csv', header=True, inferSchema=True)
 
+    print(movies_df.head())
+    movies_df.show(5)
+
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
-    total_movies = movies_df.agg(max("movieId")).collect()[0][0]
+    total_movies = movies_df.agg(max(col("movieId"))).collect()[0][0]
 
     
     # Group by userId and collect all movieIds into a list
