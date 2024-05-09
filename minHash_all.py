@@ -55,7 +55,7 @@ def main(spark, userID):
     '''
 
     ''' 2. Applying MinHash '''
-    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=5)
+    mh = MinHashLSH(inputCol="features", outputCol="hashes", numHashTables=1)
     model = mh.fit(ratings_df_final)
 
 
