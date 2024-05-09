@@ -10,7 +10,7 @@ import os
 # And pyspark.sql to get the spark session
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.sql.functions import collect_list, udf, col
+from pyspark.sql.functions import collect_list, udf, col, max
 from pyspark.ml.feature import MinHashLSH
 
 def to_sparse_vector(movie_ids, total_movies):
@@ -38,12 +38,24 @@ def main(spark, userID):
     ratings_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
     movies_df = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/movies.csv', header=True, inferSchema=True)
 
-    print(movies_df.head())
-    movies_df.show(5)
+    # print(movies_df.head())
+    # movies_df.show(5)
+    '''
+    Row(movieId=1, title='Toy Story (1995)', genres='Adventure|Animation|Children|Comedy|Fantasy')
+    +-------+--------------------+--------------------+
+    |movieId|               title|              genres|
+    +-------+--------------------+--------------------+
+    |      1|    Toy Story (1995)|Adventure|Animati...|
+    |      2|      Jumanji (1995)|Adventure|Childre...|
+    |      3|Grumpier Old Men ...|      Comedy|Romance|
+    |      4|Waiting to Exhale...|Comedy|Drama|Romance|
+    |      5|Father of the Bri...|              Comedy|
+    +-------+--------------------+--------------------+
+    '''
 
     # Get all unique movieIds
     unique_movie_ids = ratings_df.select("movieId").distinct().rdd.flatMap(lambda x: x).collect()
-    total_movies = movies_df.agg(max(col("movieId"))).collect()[0][0]
+    total_movies = movies_df.agg(max("movieId")).collect()[0][0]
 
     
     # Group by userId and collect all movieIds into a list
