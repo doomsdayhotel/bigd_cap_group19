@@ -78,6 +78,8 @@ def main(spark, userID):
         "JaccardDistance"
     )
 
+    simplified_df.show(100)
+
     print("Write simplified df to CSV\n")
     # Write the simplified DataFrame to CSV
     simplified_df.write.partitionBy("userIdA").parquet('hdfs:/user/hl5679_nyu_edu/ml-latest/top_100_pairs_all')
