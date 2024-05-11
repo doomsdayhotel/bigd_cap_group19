@@ -47,9 +47,9 @@ def partition(spark, file_path):
     test_ratings = ratings.filter(split_expr > 0.8)
 
     # Save partitioned data for future use
-    train_ratings.write.csv("/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
-    val_ratings.write.csv("/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
-    test_ratings.write.csv("//home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
+    train_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/train_ratings.csv", header=True)
+    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/val_ratings", header=True)
+    test_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/test_ratings.csv", header=True)
 
     # Display the count of records in each set
     print(f"Training data count: {train_ratings.count()}")
@@ -67,7 +67,7 @@ def main(spark, userID):
     """
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    file_path = f'/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small/ratings'
+    file_path = f'/hdfs:/user/{userID}/ml-latest-small/ratings.csv'
     partition(spark, file_path)
 
 # Only enter this block if we're in main
