@@ -11,12 +11,12 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, count, rand, row_number
 from pyspark.sql.window import Window
 
-def main(spark, userID):
+def partition(spark, file_path):
     """
     Partition the data by user into training, validation, and test sets.
     """
     # Load the ratings data
-    ratings = spark.read.csv(f'hdfs:/user/{userID}/ml-latest-small/ratings.csv', header=True, inferSchema=True)
+    ratings = spark.read.csv(file_path, header=True, inferSchema=True)
 
     # # Define the minimum number of ratings required per user
     # min_ratings = 15
@@ -57,19 +57,19 @@ def main(spark, userID):
     print(f"Test data count: {test_ratings.count()}")
 
 
-# def main(spark, userID):
-#     """
-#     Main function to execute the data processing and partitioning.
+def main(spark, userID):
+    """
+    Main function to execute the data processing and partitioning.
     
-#     Parameters
-#     ----------
-#     spark : SparkSession object
-#     userID : string, userID of student to find files in HDFS
-#     """
-#     '''1. Preprocessing Data '''
-#     # Load the ratings.csv into DataFrame
-#     file_path = f'/hdfs:/user/{userID}/ml-latest-small/ratings.csv'
-#     partition(spark, file_path)
+    Parameters
+    ----------
+    spark : SparkSession object
+    userID : string, userID of student to find files in HDFS
+    """
+    '''1. Preprocessing Data '''
+    # Load the ratings.csv into DataFrame
+    file_path = f'/hdfs:/user/{userID}/ml-latest-small/ratings.csv'
+    partition(spark, file_path)
 
 # Only enter this block if we're in main
 if __name__ == "__main__":
