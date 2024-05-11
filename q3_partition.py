@@ -23,7 +23,7 @@ def partition(spark, file_path):
 
     # # Filter users with at least 'min_ratings' ratings
     # user_rating_counts = ratings_df.groupBy("userid").agg(count("rating").alias("rating_count"))
-    # sufficient_ratings_users = user_rating_counts.filter(col("rating_count") >= min_ratings)
+    # sufficient_ratings_users = user_rating_counts.filter(col("rating_count") >= min_ratings)ß
 
     # Join back to get the filtered ratings data
     # filtered_ratings_df = ratings_df.join(sufficient_ratings_users, on="userid", how="inner")
@@ -42,19 +42,19 @@ def partition(spark, file_path):
     split_expr = col("row_number") / col("total_ratings")
     
     # Define conditions for each split
-    training_data = ratings.filter(split_expr <= 0.6)
-    validation_data = ratings.filter((split_expr > 0.6) & (split_expr <= 0.8))
-    test_data = ratings.filter(split_expr > 0.8)
+    train_ratings = ratings.filter(split_expr <= 0.6)
+    val_ratings = ratings.filter((split_expr > 0.6) & (split_expr <= 0.8))
+    test_ratings = ratings.filter(split_expr > 0.8)
 
     # Save partitioned data for future use
-    training_data.write.csv("/path_to_save_training_data.csv", header=True)
-    validation_data.write.csv("/path_to_save_validation_data.csv", header=True)
-    test_data.write.csv("/path_to_save_test_data.csv", header=True)
+    train_ratings.write.csv("/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
+    val_ratings.write.csv("/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
+    test_ratings.write.csv("//home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small.csv", header=True)
 
     # Display the count of records in each set
-    print(f"Training data count: {training_data.count()}")
-    print(f"Validation data count: {validation_data.count()}")
-    print(f"Test data count: {test_data.count()}")
+    print(f"Training data count: {train_ratings.count()}")
+    print(f"Validation data count: {val_ratings.count()}")
+    print(f"Test data count: {test_ratings.count()}")
 
 def main(spark, userID):
     """
@@ -67,7 +67,7 @@ def main(spark, userID):
     """
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    file_path = f'hdfs:/user/{userID}/ml-latest-small/ratings.csv'
+    file_path = f'/home/qy561_nyu_edu/capstone-project-cap-19/ml-latest-small/ratings'
     partition(spark, file_path)
 
 # Only enter this block if we're in main
