@@ -9,7 +9,7 @@ Usage:
 import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, count, rand, row_number
-from pyspark.sql.window import Window
+# from pyspark.sql.window import Window
 
 def partition(spark, file_path):
     """
@@ -41,7 +41,7 @@ def partition(spark, file_path):
 
     # Save partitioned data for future use
     train_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/train_ratings.csv", header=True)
-    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/val_ratings", header=True)
+    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/val_ratings.csv", header=True)
     test_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest-small/test_ratings.csv", header=True)
 
     # Display the count of records in each set
