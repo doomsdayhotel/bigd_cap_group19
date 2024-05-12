@@ -3,7 +3,7 @@
 
 """
 Usage:
-    $ spark-submit --deploy-mode client q3_partition.py <file_path>
+    $ spark-submit --deploy-mode client q3_partition_all.py <file_path>
 """
 
 import os
