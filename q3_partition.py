@@ -68,7 +68,8 @@ def main(spark, userID):
     """
     '''1. Preprocessing Data '''
     # Load the ratings.csv into DataFrame
-    file_path = f'/hdfs:/user/{userID}/ml-latest-small/ratings.csv'
+    file_path = f'hdfs:///user/{userID}/ml-latest-small/ratings.csv'
+    # f'/hdfs:/user/{userID}/ml-latest-small/ratings.csv'
     partition(spark, file_path)
 
 # Only enter this block if we're in main
