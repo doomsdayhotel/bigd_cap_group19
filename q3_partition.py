@@ -28,18 +28,11 @@ def partition(spark, file_path):
     # Join back to get the filtered ratings data
     # filtered_ratings_df = ratings_df.join(sufficient_ratings_users, on="userid", how="inner")
 
-    # Add a row number column to each user's ratings to facilitate splitting
-    window_spec = Window.partitionBy("userid")
-    ratings = ratings.withColumn("row_number", row_number().over(window_spec))
-
-    # Calculate the total number of ratings per user
-    user_total_ratings = ratings.groupBy("userid").agg(count("row_number").alias("total_ratings"))
-
-    # Join back to include total ratings in the DataFrame
-    ratings = ratings.join(user_total_ratings, on="userid", how="inner")
+    # Add a random column to each user's ratings to facilitate random splitting
+    ratings = ratings.withColumn("random_value", rand())
 
     # Calculate split indices
-    split_expr = col("row_number") / col("total_ratings")
+    split_expr = col("random_value")
     
     # Define conditions for each split
     train_ratings = ratings.filter(split_expr <= 0.6)
