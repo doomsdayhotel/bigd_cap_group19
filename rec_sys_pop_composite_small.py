@@ -17,8 +17,6 @@ def compute_popularity(ratings, minimum_percentile=0.90):
         count("rating").alias("num_ratings")
     )
 
-    # Ensure 'movieid' is carried forward if it's not automatically preserved
-    movie_ratings = movie_ratings.withColumnRenamed("movieId", "movieid")
 
     # Further transformations for composite score, etc.
     # Calculate the global average rating and the minimum number of ratings required to be considered
