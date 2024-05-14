@@ -67,12 +67,24 @@ def process_data(spark, userID):
         {'rank': 10, 'maxIter': 10, 'regParam': 0.5},
         {'rank': 20, 'maxIter': 10, 'regParam': 0.5}
     ]
-    
+
     best_model, best_map = tune_als_model(train_ratings, val_ratings, paramGrid, userID)
     
-    train_map = compute_map(get_recommendations(best_model, userID), train_ratings)
-    val_map = compute_map(get_recommendations(best_model, userID), val_ratings)
-    test_map = compute_map(get_recommendations(best_model, userID), test_ratings)
+    # Debugging: Print best MAP from tuning
+    print(f"Best Validation MAP from tuning: {best_map}")
+    
+    train_recommendations = get_recommendations(best_model, userID)
+    val_recommendations = get_recommendations(best_model, userID)
+    test_recommendations = get_recommendations(best_model, userID)
+    
+    # Debugging: Print sample recommendations
+    print(f"Train Recommendations: {train_recommendations[:10]}")
+    print(f"Validation Recommendations: {val_recommendations[:10]}")
+    print(f"Test Recommendations: {test_recommendations[:10]}")
+    
+    train_map = compute_map(train_recommendations, train_ratings)
+    val_map = compute_map(val_recommendations, val_ratings)
+    test_map = compute_map(test_recommendations, test_ratings)
     
     print(f"Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
 
@@ -83,6 +95,7 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName("q4_collaborative_filtering_model").getOrCreate()
     userID = os.getenv('USER')
     main(spark, userID)
+
 
 
 
