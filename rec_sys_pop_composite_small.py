@@ -17,8 +17,8 @@ def compute_popularity(ratings, minimum_percentile=0.90):
         count("rating").alias("num_ratings")
     )
 
-    # Ensure movie_stats is computed before moving forward
-    movie_stats.cache()
+   
+
 
     # Compute global average rating
     global_average = ratings.agg(avg("rating")).first()[0]
@@ -36,12 +36,14 @@ def compute_popularity(ratings, minimum_percentile=0.90):
     # Sort movies by composite score
     top_movies = composite_score.orderBy(col("composite_score").desc())
 
-    return top_movies
+    return top_movies, movie_stats
 
 
 def get_movie_id(top_movies, n_recommendations=100):
     ## Limit the DataFrame to the top N movies and collect their IDs into a list
     return [row['movieid'] for row in top_movies.limit(n_recommendations).collect()]
+
+
 
 def compute_map(top_movies, ratings, n_recommendations=100):
     top_movie_id = get_movie_id(top_movies, n_recommendations)
@@ -59,6 +61,9 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     return mean_average_precision
 
 def process_data(spark, userID):
+    top_movies = compute_popularity(train_ratings)
+    top_movies.printSchema()
+
     base_path = f'hdfs:///user/{userID}/ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
