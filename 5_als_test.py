@@ -5,10 +5,6 @@
 Usage:
     $ spark-submit --deploy-mode client rec_sys.py <file_path>
 """
-import os
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, expr, size, collect_list, array_intersect
-from pyspark.ml.recommendation import ALS
 
 import os
 from pyspark.sql import SparkSession
@@ -36,8 +32,9 @@ def get_top_n_recommendations(model, n_recommendations=100):
     return user_recs
 
 def get_movie_id(top_movies, n_recommendations=100):
-    # Limit the DataFrame to the top N movies and collect their IDs into a list
-    return [row['movieId'] for row in top_movies.limit(n_recommendations).collect()]
+    # Extract the top N movie IDs from the recommendations DataFrame
+    top_movie_ids = top_movies.select(explode("recommendations.movieId").alias("movieId")).distinct().limit(n_recommendations).collect()
+    return [row['movieId'] for row in top_movie_ids]
 
 def compute_map(top_movies, ratings, n_recommendations=100):
     top_movie_id = get_movie_id(top_movies, n_recommendations)
@@ -97,4 +94,3 @@ def main(spark):
 if __name__ == "__main__":
     spark = SparkSession.builder.appName('als_recommender').getOrCreate()
     main(spark)
-
