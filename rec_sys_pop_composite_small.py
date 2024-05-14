@@ -11,26 +11,29 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 
 def compute_popularity(ratings, minimum_percentile=0.90):
-    # Calculate average ratings and the number of ratings for each movie
-    movie_ratings = ratings.groupBy("movieid").agg(
+    # Calculate average rating and count of ratings per movie
+    movie_stats = ratings.groupBy("movieId").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
 
+    # Ensure movie_stats is computed before moving forward
+    movie_stats.cache()
 
-    # Further transformations for composite score, etc.
-    # Calculate the global average rating and the minimum number of ratings required to be considered
+    # Compute global average rating
     global_average = ratings.agg(avg("rating")).first()[0]
-    minimum_ratings = ratings.stat.approxQuantile("num_ratings", [minimum_percentile], 0.0)[0]
 
-    # Calculate the composite score for each movie
-    composite_score = movie_ratings.withColumn(
+    # Compute the 90th percentile of number of ratings
+    minimum_ratings = movie_stats.stat.approxQuantile("num_ratings", [0.90], 0.0)[0]
+
+    # Create composite score based on global average and number of ratings
+    composite_score = movie_stats.withColumn(
         "composite_score",
-        (col("num_ratings") / (col("num_ratings") + lit(minimum_ratings)) * col("avg_rating")) +
-        (lit(minimum_ratings) / (col("num_ratings") + lit(minimum_ratings)) * lit(global_average))
+        (col("num_ratings") / (col("num_ratings") + minimum_ratings)) * col("avg_rating") +
+        (minimum_ratings / (col("num_ratings") + minimum_ratings)) * global_average
     )
 
-    # Return the top movies sorted by the composite score
+    # Sort movies by composite score
     top_movies = composite_score.orderBy(col("composite_score").desc())
 
     return top_movies
