@@ -12,7 +12,7 @@ from pyspark.sql.functions import col, avg, count, expr, lit
 
 def compute_popularity(ratings):
     # Calculate average ratings for each movie
-    movie_ratings = ratings.groupBy("movieid").agg(
+    movie_ratings = ratings.groupBy("movieId").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
@@ -22,13 +22,13 @@ def compute_popularity(ratings):
 
 def get_movie_id(top_movies, n_recommendations=100):
     ## Limit the DataFrame to the top N movies and collect their IDs into a list
-    return [row['movieid'] for row in top_movies.limit(n_recommendations).collect()]
+    return [row['movieId'] for row in top_movies.limit(n_recommendations).collect()]
 
 def compute_map(top_movies, ratings, n_recommendations=100):
     top_movie_id = get_movie_id(top_movies, n_recommendations)
     top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_id])})"
     user_actual_movies = ratings.groupBy("userid").agg(
-        expr("collect_list(movieid) as actual_movies")
+        expr("collect_list(movieId) as actual_movies")
     )
 
     precision_per_user = user_actual_movies.select(
