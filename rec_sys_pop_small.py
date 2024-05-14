@@ -3,7 +3,7 @@
 
 """
 Usage:
-    $ spark-submit --deploy-mode client q3_partition.py <file_path>
+    $ spark-submit --deploy-mode client rec_sys.py <file_path>
 """
 
 import os
@@ -30,7 +30,7 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     user_actual_movies = ratings.groupBy("userid").agg(
         expr("collect_list(movieid) as actual_movies")
     )
-    
+
     precision_per_user = user_actual_movies.select(
         expr(f"size(array_intersect(actual_movies, {top_movie_id_expr})) as hits"),
         expr("size(actual_movies) as total_relevant"),
