@@ -8,7 +8,6 @@ Usage:
 import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, expr, size, collect_list, array_intersect
-from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
 
 def train_als_model(ratings):
@@ -25,17 +24,6 @@ def train_als_model(ratings):
     # Train the model
     als_model = als.fit(ratings)
     return als_model
-
-def evaluate_model_rmse(model, ratings):
-    # Make predictions
-    predictions = model.transform(ratings)
-    evaluator = RegressionEvaluator(
-        metricName="rmse",
-        labelCol="rating",
-        predictionCol="prediction"
-    )
-    rmse = evaluator.evaluate(predictions)
-    return rmse
 
 def get_top_n_recommendations(model, n_recommendations=100):
     # Generate top N movie recommendations for each user
@@ -81,17 +69,6 @@ def process_data(spark):
 
     # Train ALS model
     als_model = train_als_model(train_ratings)
-
-    # Evaluate the model
-    print("Evaluating on Training data")
-    train_rmse = evaluate_model_rmse(als_model, train_ratings)
-    print(f"Train RMSE: {train_rmse}")
-    print("Evaluating on Validation data")
-    val_rmse = evaluate_model_rmse(als_model, val_ratings)
-    print(f"Validation RMSE: {val_rmse}")
-    print("Evaluating on Test data")
-    test_rmse = evaluate_model_rmse(als_model, test_ratings)
-    print(f"Test RMSE: {test_rmse}")
 
     # Get top N recommendations
     top_recommendations = get_top_n_recommendations(als_model)
