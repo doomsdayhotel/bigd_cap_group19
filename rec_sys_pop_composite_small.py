@@ -56,7 +56,7 @@ def compute_map(top_movies, ratings, n_recommendations=100):
 
 
 def process_data(spark):
-    base_path = f'hdfs:///user/qy561/ml-latest-small'
+    base_path = f'hdfs:///user/qy561_nyu_edu/ml-latest-small'
     # base_path = f'./ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
