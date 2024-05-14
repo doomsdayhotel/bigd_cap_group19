@@ -10,7 +10,6 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 from pyspark.ml.recommendation import ALS
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 
 def train_als_model(ratings, rank=10, maxIter=10, regParam=0.1):
     als = ALS(rank=rank, maxIter=maxIter, regParam=regParam, userCol="userId", itemCol="movieId", ratingCol="rating", coldStartStrategy="drop")
@@ -21,11 +20,10 @@ def get_recommendations(model, user_id, n_recommendations=100):
     user_df = spark.createDataFrame([(user_id,)], ["userId"])
     user_recommendations = model.recommendForUserSubset(user_df, n_recommendations)
     recommendations = user_recommendations.selectExpr("explode(recommendations) as rec").selectExpr("rec.movieId as movieId")
-    return recommendations.collect()
+    return [row['movieId'] for row in recommendations.collect()]
 
-def compute_map(top_movies, ratings, n_recommendations=100):
-    top_movie_id = [row['movieId'] for row in top_movies.limit(n_recommendations).collect()]
-    top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_id])})"
+def compute_map(top_movie_ids, ratings, n_recommendations=100):
+    top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_ids])})"
     user_actual_movies = ratings.groupBy("userId").agg(expr("collect_list(movieId) as actual_movies"))
     
     precision_per_user = user_actual_movies.select(
@@ -37,7 +35,7 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     mean_average_precision = precision_per_user.selectExpr("avg(precision_at_k) as MAP").first()["MAP"]
     return mean_average_precision
 
-def tune_als_model(train_ratings, val_ratings, paramGrid):
+def tune_als_model(train_ratings, val_ratings, paramGrid, userID):
     best_map = -1
     best_model = None
     for params in paramGrid:
@@ -70,7 +68,7 @@ def process_data(spark, userID):
         {'rank': 20, 'maxIter': 10, 'regParam': 0.5}
     ]
     
-    best_model, best_map = tune_als_model(train_ratings, val_ratings, paramGrid)
+    best_model, best_map = tune_als_model(train_ratings, val_ratings, paramGrid, userID)
     
     train_map = compute_map(get_recommendations(best_model, userID), train_ratings)
     val_map = compute_map(get_recommendations(best_model, userID), val_ratings)
