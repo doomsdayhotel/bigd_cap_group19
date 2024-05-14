@@ -41,9 +41,9 @@ def compute_map(top_movies, ratings, n_recommendations=100):
 
 def process_data(spark, userID):
     base_path = f'hdfs:///user/{userID}/ml-latest'
-    train_path = f'{base_path}/train_ratings_alt.csv'
-    val_path = f'{base_path}/val_ratings_alt.csv'
-    test_path = f'{base_path}/test_ratings_alt.csv'
+    train_path = f'{base_path}/train_ratings.csv'
+    val_path = f'{base_path}/val_ratings.csv'
+    test_path = f'{base_path}/test_ratings.csv'
     
     train_ratings = spark.read.csv(train_path, header=True, inferSchema=True)
     val_ratings = spark.read.csv(val_path, header=True, inferSchema=True)
