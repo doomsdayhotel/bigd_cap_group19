@@ -10,33 +10,32 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 
-def compute_popularity(ratings):
-    # First, calculate average ratings and the number of ratings for each movie
-    movie_ratings = ratings.groupBy("movieId").agg(
+
+def compute_popularity(ratings, minimum_percentile=0.90):
+    # Calculate average ratings and the number of ratings for each movie
+    movie_stats = ratings.groupBy("movieid").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
-    
-    # Ensure the DataFrame is materialized so that 'num_ratings' exists
-    movie_ratings.cache()
 
-    # Calculate the global average rating and the 90th percentile of the number of ratings
+    # Calculate the global average rating and the minimum number of ratings required to be considered
     global_average = ratings.agg(avg("rating")).first()[0]
-    minimum_ratings = movie_ratings.stat.approxQuantile("num_ratings", [0.90], 0.0)[0]
+    minimum_ratings = ratings.stat.approxQuantile("num_ratings", [minimum_percentile], 0.0)[0]
 
-    # Add a composite score column that uses both 'avg_rating' and 'num_ratings'
-    composite_score = movie_ratings.withColumn(
+    # Calculate the composite score for each movie
+    composite_score = movie_stats.withColumn(
         "composite_score",
-        (col("num_ratings") / (col("num_ratings") + minimum_ratings) * col("avg_rating")) +
-        (minimum_ratings / (col("num_ratings") + minimum_ratings) * global_average)
+        (col("num_ratings") / (col("num_ratings") + lit(minimum_ratings)) * col("avg_rating")) +
+        (lit(minimum_ratings) / (col("num_ratings") + lit(minimum_ratings)) * lit(global_average))
     )
 
     # Return the top movies sorted by the composite score
     top_movies = composite_score.orderBy(col("composite_score").desc())
-    return top_movies
-
 
     return top_movies
+
+# Adjust other parts of your existing code to use this new 'compute_popularity' where needed.
+
 def get_movie_id(top_movies, n_recommendations=100):
     ## Limit the DataFrame to the top N movies and collect their IDs into a list
     return [row['movieid'] for row in top_movies.limit(n_recommendations).collect()]
