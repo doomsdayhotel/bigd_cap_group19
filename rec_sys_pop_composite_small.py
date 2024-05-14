@@ -11,24 +11,26 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 
 def compute_popularity(ratings, minimum_percentile=0.90):
-    # Calculate average ratings and the number of ratings for each movie
+    # Calculate average rating and count of ratings per movie
     movie_stats = ratings.groupBy("movieId").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
 
-    # Calculate the global average rating and the minimum number of ratings required to be considered
+    # Compute global average rating
     global_average = ratings.agg(avg("rating")).first()[0]
-    minimum_ratings = ratings.stat.approxQuantile("num_ratings", [minimum_percentile], 0.0)[0]
 
-    # Calculate the composite score for each movie
+    # Compute the 90th percentile of number of ratings
+    minimum_ratings = movie_stats.stat.approxQuantile("num_ratings", [0.90], 0.0)[0]
+
+    # Create composite score based on global average and number of ratings
     composite_score = movie_stats.withColumn(
         "composite_score",
-        (col("num_ratings") / (col("num_ratings") + lit(minimum_ratings)) * col("avg_rating")) +
-        (lit(minimum_ratings) / (col("num_ratings") + lit(minimum_ratings)) * lit(global_average))
+        (col("num_ratings") / (col("num_ratings") + minimum_ratings)) * col("avg_rating") +
+        (minimum_ratings / (col("num_ratings") + minimum_ratings)) * global_average
     )
 
-    # Return the top movies sorted by the composite score
+    # Sort movies by composite score
     top_movies = composite_score.orderBy(col("composite_score").desc())
 
     return top_movies
@@ -52,8 +54,10 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     mean_average_precision = precision_per_user.selectExpr("avg(precision_at_k) as MAP").first()['MAP']
     return mean_average_precision
 
-def process_data(spark, userID):
-    base_path = f'hdfs:///user/{userID}/ml-latest-small'
+
+def process_data(spark):
+    base_path = f'hdfs:///user/qy561/ml-latest-small'
+    base_path = f'./ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
@@ -69,15 +73,16 @@ def process_data(spark, userID):
 
     print(f"Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
 
-def main(spark, userID):
-    process_data(spark, userID)
+def main(spark):
+    process_data(spark)
 
 if __name__ == "__main__":
     spark = SparkSession.builder.appName('q4_popularity_model').getOrCreate()
 
     userID = os.getenv('USER')
 
-    main(spark, userID)
+#     main(spark, userID)
+    main(spark)
 
 
 
