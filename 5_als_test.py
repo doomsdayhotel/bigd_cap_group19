@@ -75,13 +75,13 @@ def process_data(spark):
     top_recommendations = get_top_n_recommendations(als_model)
 
     # Compute MAP
-    print("Computing MAP on Training data")
+    # print("Computing MAP on Training data")
     train_map = compute_map(top_recommendations, train_ratings)
     print(f"Train MAP: {train_map}")
-    print("Computing MAP on Validation data")
+    # print("Computing MAP on Validation data")
     val_map = compute_map(top_recommendations, val_ratings)
     print(f"Validation MAP: {val_map}")
-    print("Computing MAP on Test data")
+    # print("Computing MAP on Test data")
     test_map = compute_map(top_recommendations, test_ratings)
     print(f"Test MAP: {test_map}")
 
@@ -89,7 +89,7 @@ def process_data(spark):
 
 def main(spark):
     top_recommendations = process_data(spark)
-    print("Top Recommendations:", top_recommendations)
+    # print("Top Recommendations:", top_recommendations)
 
 if __name__ == "__main__":
     spark = SparkSession.builder.appName('als_recommender').getOrCreate()
