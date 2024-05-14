@@ -8,7 +8,7 @@ Usage:
 
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, expr, size, collect_list, array_intersect, explode
+from pyspark.sql.functions import col, expr, size, collect_list, array_intersect, lit, explode
 from pyspark.ml.recommendation import ALS
 
 def train_als_model(ratings):
