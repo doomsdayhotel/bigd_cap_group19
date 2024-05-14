@@ -40,9 +40,9 @@ def partition(spark, file_path):
     test_ratings = ratings.filter(split_expr > 0.8)
 
     # Save partitioned data for future use
-    train_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/train_ratings_new.csv", header=True)
-    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/val_ratings_new.csv", header=True)
-    test_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/test_ratings_new.csv", header=True)
+    train_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/train_ratings.csv", header=True)
+    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/val_ratings.csv", header=True)
+    test_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/test_ratings.csv", header=True)
 
     # Display the count of records in each set
     print(f"Training data count: {train_ratings.count()}")
