@@ -11,45 +11,37 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 
 def compute_popularity(ratings, minimum_percentile=0.90):
-    # Calculate average rating and count of ratings per movie
+    # Calculate average ratings and the number of ratings for each movie
     movie_stats = ratings.groupBy("movieId").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
 
-   
-
-
-    # Compute global average rating
+    # Calculate the global average rating and the minimum number of ratings required to be considered
     global_average = ratings.agg(avg("rating")).first()[0]
+    minimum_ratings = ratings.stat.approxQuantile("num_ratings", [minimum_percentile], 0.0)[0]
 
-    # Compute the 90th percentile of number of ratings
-    minimum_ratings = movie_stats.stat.approxQuantile("num_ratings", [0.90], 0.0)[0]
-
-    # Create composite score based on global average and number of ratings
+    # Calculate the composite score for each movie
     composite_score = movie_stats.withColumn(
         "composite_score",
-        (col("num_ratings") / (col("num_ratings") + minimum_ratings)) * col("avg_rating") +
-        (minimum_ratings / (col("num_ratings") + minimum_ratings)) * global_average
+        (col("num_ratings") / (col("num_ratings") + lit(minimum_ratings)) * col("avg_rating")) +
+        (lit(minimum_ratings) / (col("num_ratings") + lit(minimum_ratings)) * lit(global_average))
     )
 
-    # Sort movies by composite score
+    # Return the top movies sorted by the composite score
     top_movies = composite_score.orderBy(col("composite_score").desc())
 
-    return top_movies, movie_stats
-
+    return top_movies
 
 def get_movie_id(top_movies, n_recommendations=100):
     ## Limit the DataFrame to the top N movies and collect their IDs into a list
-    return [row['movieid'] for row in top_movies.limit(n_recommendations).collect()]
-
-
+    return [row['movieId'] for row in top_movies.limit(n_recommendations).collect()]
 
 def compute_map(top_movies, ratings, n_recommendations=100):
     top_movie_id = get_movie_id(top_movies, n_recommendations)
     top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_id])})"
     user_actual_movies = ratings.groupBy("userid").agg(
-        expr("collect_list(movieid) as actual_movies")
+        expr("collect_list(movieId) as actual_movies")
     )
 
     precision_per_user = user_actual_movies.select(
@@ -61,9 +53,6 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     return mean_average_precision
 
 def process_data(spark, userID):
-    top_movies = compute_popularity(train_ratings)
-    top_movies.printSchema()
-
     base_path = f'hdfs:///user/{userID}/ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
@@ -89,5 +78,6 @@ if __name__ == "__main__":
     userID = os.getenv('USER')
 
     main(spark, userID)
+
 
 
