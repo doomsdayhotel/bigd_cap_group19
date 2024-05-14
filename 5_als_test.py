@@ -30,31 +30,49 @@ def get_top_n_recommendations(model, n_recommendations=100):
     user_recs = model.recommendForAllUsers(n_recommendations)
     return user_recs
 
-def compute_map(top_recommendations, ratings, n_recommendations=100):
-    top_movie_id_expr = f"array({','.join([f'topRecommendations[{i}].movieId' for i in range(n_recommendations)])})"
+# def compute_map(top_recommendations, ratings, n_recommendations=100):
+#     top_movie_id_expr = f"array({','.join([f'topRecommendations[{i}].movieId' for i in range(n_recommendations)])})"
     
+#     user_actual_movies = ratings.groupBy("userId").agg(
+#         expr("collect_list(movieId) as actual_movies")
+#     )
+
+#     precision_per_user = user_actual_movies.join(top_recommendations, "userId").select(
+#         col("userId"),
+#         expr(f"array_intersect(actual_movies, {top_movie_id_expr}) as hits"),
+#         size("actual_movies").alias("total_relevant"),
+#         expr(f"size(array_intersect(actual_movies, {top_movie_id_expr})) as hits"),
+#         size(top_movie_id_expr).alias("total_recommended"),
+#     ).selectExpr(
+#         "userId",
+#         "total_recommended",
+#         "total_relevant",
+#         "hits",
+#         "size(hits)/total_recommended as precision_at_k"
+#     )
+
+#     mean_average_precision = precision_per_user.selectExpr(
+#         "avg(precision_at_k) as MAP"
+#     ).first()["MAP"]
+    
+#     return mean_average_precision
+def get_movie_id(top_movies, n_recommendations=100):
+    ## Limit the DataFrame to the top N movies and collect their IDs into a list
+    return [row['movieId'] for row in top_movies.limit(n_recommendations).collect()]
+
+def compute_map(top_movies, ratings, n_recommendations=100):
+    top_movie_id = get_movie_id(top_movies, n_recommendations)
+    top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_id])})"
     user_actual_movies = ratings.groupBy("userId").agg(
         expr("collect_list(movieId) as actual_movies")
     )
 
-    precision_per_user = user_actual_movies.join(top_recommendations, "userId").select(
-        col("userId"),
-        expr(f"array_intersect(actual_movies, {top_movie_id_expr}) as hits"),
-        size("actual_movies").alias("total_relevant"),
+    precision_per_user = user_actual_movies.select(
         expr(f"size(array_intersect(actual_movies, {top_movie_id_expr})) as hits"),
-        size(top_movie_id_expr).alias("total_recommended"),
-    ).selectExpr(
-        "userId",
-        "total_recommended",
-        "total_relevant",
-        "hits",
-        "size(hits)/total_recommended as precision_at_k"
-    )
-
-    mean_average_precision = precision_per_user.selectExpr(
-        "avg(precision_at_k) as MAP"
-    ).first()["MAP"]
-    
+        expr("size(actual_movies) as total_relevant"),
+        lit(n_recommendations).alias("total_recommendations")
+    ).selectExpr("hits / total_recommendations as precision_at_k")
+    mean_average_precision = precision_per_user.selectExpr("avg(precision_at_k) as MAP").first()['MAP']
     return mean_average_precision
 
 def process_data(spark):
