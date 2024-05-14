@@ -28,17 +28,11 @@ def partition(spark, file_path):
     # Join back to get the filtered ratings data
     ratings = ratings.join(sufficient_ratings_users, on="userId", how="inner")
 
-        # Define the window specification by user and order by a random value
+    # Define the window specification by user and order by a random value
     window_spec = Window.partitionBy("userId").orderBy(rand())
 
     # Add a row number to each user's ratings to facilitate partitioning
     ratings = ratings.withColumn("row_num", row_number().over(window_spec))
-
-    # Calculate the number of ratings per user
-    user_rating_counts = ratings.groupBy("userId").agg(count("rating").alias("rating_count"))
-
-    # Join the counts back to the ratings dataframe
-    ratings = ratings.join(user_rating_counts, on="userId", how="inner")
 
     # Define the splitting conditions
     ratings = ratings.withColumn(
