@@ -10,20 +10,23 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit
 
-
 def compute_popularity(ratings, minimum_percentile=0.90):
     # Calculate average ratings and the number of ratings for each movie
-    movie_stats = ratings.groupBy("movieid").agg(
+    movie_ratings = ratings.groupBy("movieid").agg(
         avg("rating").alias("avg_rating"),
         count("rating").alias("num_ratings")
     )
 
+    # Ensure 'movieid' is carried forward if it's not automatically preserved
+    movie_ratings = movie_ratings.withColumnRenamed("movieId", "movieid")
+
+    # Further transformations for composite score, etc.
     # Calculate the global average rating and the minimum number of ratings required to be considered
     global_average = ratings.agg(avg("rating")).first()[0]
     minimum_ratings = ratings.stat.approxQuantile("num_ratings", [minimum_percentile], 0.0)[0]
 
     # Calculate the composite score for each movie
-    composite_score = movie_stats.withColumn(
+    composite_score = movie_ratings.withColumn(
         "composite_score",
         (col("num_ratings") / (col("num_ratings") + lit(minimum_ratings)) * col("avg_rating")) +
         (lit(minimum_ratings) / (col("num_ratings") + lit(minimum_ratings)) * lit(global_average))
@@ -34,15 +37,12 @@ def compute_popularity(ratings, minimum_percentile=0.90):
 
     return top_movies
 
-# Adjust other parts of your existing code to use this new 'compute_popularity' where needed.
 
 def get_movie_id(top_movies, n_recommendations=100):
     ## Limit the DataFrame to the top N movies and collect their IDs into a list
     return [row['movieid'] for row in top_movies.limit(n_recommendations).collect()]
 
 def compute_map(top_movies, ratings, n_recommendations=100):
-    top_movies.printSchema()
-    
     top_movie_id = get_movie_id(top_movies, n_recommendations)
     top_movie_id_expr = f"array({','.join([str(x) for x in top_movie_id])})"
     user_actual_movies = ratings.groupBy("userid").agg(
