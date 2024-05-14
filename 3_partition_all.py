@@ -22,11 +22,11 @@ def partition(spark, file_path):
     min_ratings = 20
 
     # Filter users with at least 'min_ratings' ratings
-    user_rating_counts = ratings.groupBy("userid").agg(count("rating").alias("rating_count"))
+    user_rating_counts = ratings.groupBy("userId").agg(count("rating").alias("rating_count"))
     sufficient_ratings_users = user_rating_counts.filter(col("rating_count") >= min_ratings)
 
     # Join back to get the filtered ratings data
-    ratings = ratings.join(sufficient_ratings_users, on="userid", how="inner")
+    ratings = ratings.join(sufficient_ratings_users, on="userId", how="inner")
 
     # Add a random column to each user's ratings to facilitate random splitting
     ratings = ratings.withColumn("random_value", rand())
