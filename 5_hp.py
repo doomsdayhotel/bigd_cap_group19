@@ -100,9 +100,9 @@ def process_data(spark):
 
     return top_recommendations
 
-def main():
-    spark = SparkSession.builder.appName("als_recommender").getOrCreate()
+def main(spark):
     process_data(spark)
 
 if __name__ == "__main__":
-    main()
+    spark = SparkSession.builder.appName("als_recommender").getOrCreate()
+    main(spark)
