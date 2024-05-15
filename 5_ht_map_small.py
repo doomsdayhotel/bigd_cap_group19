@@ -11,6 +11,7 @@ from pyspark.sql.window import Window
 from pyspark.sql import SparkSession
 from pyspark.ml.recommendation import ALS
 from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.evaluation import Evaluator
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 from pyspark.sql.functions import col, expr, size, collect_list, explode, array_intersect, lit
 from pyspark.sql import functions as F
