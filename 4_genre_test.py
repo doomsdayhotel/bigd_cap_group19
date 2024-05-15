@@ -5,6 +5,7 @@
 Usage:
     $ spark-submit --deploy-mode client rec_sys.py 
 """
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, count, expr, lit, split, explode
 
