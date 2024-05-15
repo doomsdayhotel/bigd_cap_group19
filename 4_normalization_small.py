@@ -44,7 +44,7 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     return mean_average_precision
 
 def process_data(spark, userID):
-    base_path = f'hdfs:///user/{userID}/ml-latest-small'
+    xx
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
