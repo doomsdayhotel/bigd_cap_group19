@@ -7,7 +7,7 @@ Usage:
 """
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, avg, count, explode, split, lit, expr, array
+from pyspark.sql.functions import col, avg, count, explode, split, lit, array, expr
 
 def compute_clustered_popularity(ratings, movies):
     # Split the genres column into multiple rows
@@ -37,7 +37,7 @@ def get_movie_id(top_movies, n_recommendations=100):
 
 def compute_map(top_movies, ratings, n_recommendations=100):
     top_movie_id = get_movie_id(top_movies, n_recommendations)
-    top_movie_id_expr = array([lit(x) for x in top_movie_id])
+    top_movie_id_expr = array(*[lit(x) for x in top_movie_id])  # Correct the array construction
     user_actual_movies = ratings.groupBy("userId").agg(
         expr("collect_list(movieId) as actual_movies")
     )
@@ -76,6 +76,8 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName('q4_clustered_popularity_model').getOrCreate()
     userID = os.getenv('USER')
     main(spark, userID)
+
+
 
 
 
