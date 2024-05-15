@@ -49,9 +49,9 @@ def partition(spark, file_path):
 
 
     # Save partitioned data for future use
-    train_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/train_ratings.csv", header=True)
-    val_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/val_ratings.csv", header=True)
-    test_ratings.write.csv("hdfs:/user/qy561_nyu_edu/ml-latest/test_ratings.csv", header=True)
+    train_ratings.write.csv("hdfs:/user/{userID}/ml-latest/train_ratings.csv", header=True)
+    val_ratings.write.csv("hdfs:/user/{userID}/ml-latest/val_ratings.csv", header=True)
+    test_ratings.write.csv("hdfs:/user/{userID}/ml-latest/test_ratings.csv", header=True)
 
     # Display the count of records in each set
     print(f"Training data count: {train_ratings.count()}")
