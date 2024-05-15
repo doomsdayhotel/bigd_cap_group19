@@ -79,7 +79,7 @@ def get_movie_id(top_movies, n_recommendations=100):
     return f"array({','.join([str(row['movieId']) for row in top_movie_ids])})"
 
 def process_data(spark):
-    base_path = 'hdfs://user/ay561_nyu_edu/ml-latest-small'
+    base_path = 'hdfs://user/qy561_nyu_edu/ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
