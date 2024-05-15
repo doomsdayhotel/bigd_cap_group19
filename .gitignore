@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Ignore large data files for ml_latest directory
+ml_latest/*.csv
+ml_latest/*.zip
