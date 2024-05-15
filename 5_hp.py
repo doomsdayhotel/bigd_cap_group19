@@ -78,8 +78,8 @@ def get_movie_id(top_movies, n_recommendations=100):
     top_movie_ids = top_movies.select(explode("recommendations.movieId").alias("movieId")).distinct().limit(n_recommendations).collect()
     return f"array({','.join([str(row['movieId']) for row in top_movie_ids])})"
 
-def process_data(spark):
-    base_path = 'hdfs://user/qy561_nyu_edu/ml-latest-small'
+def process_data(spark, userID):
+    base_path = f'hdfs:///user/{userID}/ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
@@ -100,9 +100,10 @@ def process_data(spark):
 
     return top_recommendations
 
-def main(spark):
-    process_data(spark)
+def main(spark, userID):
+    process_data(spark, userID)
 
 if __name__ == "__main__":
     spark = SparkSession.builder.appName("als_recommender").getOrCreate()
-    main(spark)
+    userID = os.getenv('USER')
+    main(spark, userID)
