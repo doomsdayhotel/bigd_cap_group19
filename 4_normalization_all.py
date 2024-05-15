@@ -45,13 +45,13 @@ def compute_map(top_movies, ratings, n_recommendations=100):
 
 def process_data(spark, userID):
     base_path = f'hdfs:///user/{userID}/ml-latest'
-    train_path = f'{base_path}/train_ratings.csv'
-    val_path = f'{base_path}/val_ratings.csv'
-    test_path = f'{base_path}/test_ratings.csv'
+    train_path = f'{base_path}/train_ratings.parquet'
+    val_path = f'{base_path}/val_ratings.parquet'
+    test_path = f'{base_path}/test_ratings.parquet'
 
-    train_ratings = spark.read.csv(train_path, header=True, inferSchema=True)
-    val_ratings = spark.read.csv(val_path, header=True, inferSchema=True)
-    test_ratings = spark.read.csv(test_path, header=True, inferSchema=True)
+    train_ratings = spark.read.parquet(train_path, header=True, inferSchema=True)
+    val_ratings = spark.read.parquet(val_path, header=True, inferSchema=True)
+    test_ratings = spark.read.parquet(test_path, header=True, inferSchema=True)
 
     top_movies = compute_mean_centered_popularity(train_ratings)
     train_map = compute_map(top_movies, train_ratings)
