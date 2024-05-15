@@ -7,7 +7,7 @@ Usage:
 """
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, avg, count, explode, split, lit, expr
+from pyspark.sql.functions import col, avg, count, explode, split, lit, expr, array
 
 def compute_clustered_popularity(ratings, movies):
     # Split the genres column into multiple rows
