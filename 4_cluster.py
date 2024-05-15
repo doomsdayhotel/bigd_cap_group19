@@ -51,7 +51,7 @@ def compute_map(top_movies, ratings, n_recommendations=100):
 
 def process_data(spark, userID):
     # Local paths for testing purposes
-    base_path = f'hdfs:///user/{userID}/ml-latest-small'
+    base_path = f'/path/to/your/local/dataset'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
@@ -79,11 +79,7 @@ if __name__ == "__main__":
 
 
 
-
-
-     
-
-    
+    base_path = f'hdfs:///user/{userID}/ml-latest-small'
 
 
 
