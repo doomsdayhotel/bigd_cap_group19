@@ -39,8 +39,12 @@ def get_genre_names(top_genres, n_recommendations=100):
 def compute_map(top_genres, ratings, movies, n_recommendations=100):
     top_genre_names = get_genre_names(top_genres, n_recommendations)
     # Properly format the genre names for the SQL expression
-    
-    top_genre_names_expr = f"array({','.join([f'\"{x}\"' for x in top_genre_names])})"
+
+    # top_genre_names_expr = f"array({','.join([f'\"{x}\"' for x in top_genre_names])})"
+
+    top_genre_names_expr = f"array({','.join([f'\\\"{x}\\\"' for x in top_genre_names])})"
+
+
 
     
     user_actual_genres = ratings.join(movies, on="movieId").withColumn("genre", explode(split(col("genres"), "\\|"))).groupBy("userId").agg(
