@@ -36,7 +36,7 @@ def get_movie_id(top_genres, n_recommendations=100):
     # Limit the DataFrame to the top N genres and collect their IDs into a list
     return [row['genre'] for row in top_genres.limit(n_recommendations).collect()]
 
-def compute_map(top_genres, ratings, n_recommendations=100):
+def compute_map(top_genres, ratings, movies, n_recommendations=100):
     top_genre_id = get_movie_id(top_genres, n_recommendations)
     top_genre_id_expr = f"array({','.join([str(x) for x in top_genre_id])})"
     
@@ -68,9 +68,9 @@ def process_data(spark, userID):
     
     top_genres = compute_popularity(train_ratings, movies)
     
-    train_map = compute_map(top_genres, train_ratings)
-    val_map = compute_map(top_genres, val_ratings)
-    test_map = compute_map(top_genres, test_ratings)
+    train_map = compute_map(top_genres, train_ratings, movies)
+    val_map = compute_map(top_genres, val_ratings, movies)
+    test_map = compute_map(top_genres, test_ratings, movies)
     
     print(f"Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
 
@@ -81,4 +81,3 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName('q4_popularity_model').getOrCreate()
     userID = os.getenv('USER')
     main(spark, userID)
-
