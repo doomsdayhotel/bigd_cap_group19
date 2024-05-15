@@ -32,8 +32,8 @@ def main(spark):
     test = spark.read.csv('hdfs:/user/qy561_nyu_edu/ml-latest-small/test_ratings.csv', header=True, inferSchema=True)
 
     # Convert to Parquet and save to HDFS directory
-    train.write.parquet('hdfs:/user/qy561_nyu_edu/ml-latest-small/train_ratings.parquet')
-    val.write.parquet('hdfs:/user/qy561_nyu_edu/ml-latest-small/val_ratings.parquet')
+    train.write.mode("overwrite").parquet('hdfs:/user/qy561_nyu_edu/ml-latest-small/train_ratings.parquet')
+    val.write.mode("overwrite").parquet('hdfs:/user/qy561_nyu_edu/ml-latest-small/val_ratings.parquet')
     test.write.parquet('hdfs:/user/qy561_nyu_edu/ml-latest-small/test_ratings.parquet')
 
     # use the following code to check and preview parquet files
