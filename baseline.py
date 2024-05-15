@@ -12,48 +12,46 @@ class PopularityBaseline:
         self.evaluation = EvaluationUtil(self.spark)
 
     def get_baseline(self, version='simple', dampening_factor=None):
-        match version:
+        # Rank based on rating count
+        if version == 'simple':
+            baseline = self.df_train.groupBy('movieId').agg(
+                count('rating').alias('rating_count')
+            ).orderBy(col('rating_count').desc)
 
-            # Rank based on rating count
-            case 'simple':
-                baseline = self.df_train.groupBy('movieId').agg(
-                    count('rating').alias('rating_count')
-                ).orderBy(col('rating_count').desc)
+        # Rank weighted average using IMDb formula:
+        # weighted rating = (rating_avg * rating_count + overall_avg * min_threshold)/(rating_count + min_threshold)
+        elif version == 'weighted':
+            # Average rating
+            overall_avg = self.df_train.agg(
+                avg('rating').alias('rating_overall_avg')
+            ).collect()[0]['rating_overall_avg']
 
-            # Rank weighted average using IMDb formula:
-            # weighted rating = (rating_avg * rating_count + overall_avg * min_threshold)/(rating_count + min_threshold)
-            case 'weighted':
-                # Average rating
-                overall_avg = self.df_train.agg(
-                    avg('rating').alias('rating_overall_avg')
-                ).collect()[0]['rating_overall_avg']
+            # Minimum rating threshold
+            min_threshold = self.df_train.approxQuantile('rating_count', [0.9], 0.05)[0]
 
-                # Minimum rating threshold
-                min_threshold = self.df_train.approxQuantile('rating_count', [0.9], 0.05)[0]
+            baseline = self.df_train.groupBy('movieId').agg(
+                count('rating').alias('rating_count'),
+                avg('rating').alias('rating_avg')
+            ).withColumn(
+                'weighted_average',
+                (col('rating_avg') * col('rating_count') + lit(overall_avg) * lit(min_threshold)) /
+                (col('rating_count') + lit(min_threshold))
+            ).orderBy(col('weighted_average').desc())
 
-                baseline = self.df_train.groupBy('movieId').agg(
-                    count('rating').alias('rating_count'),
-                    avg('rating').alias('rating_avg')
-                ).withColumn(
-                    'weighted_average',
-                    (col('rating_avg') * col('rating_count') + lit(overall_avg) * lit(min_threshold)) /
-                    (col('rating_count') + lit(min_threshold))
-                ).orderBy(col('weighted_average').desc())
+        # Rank with dampening factor to balance rating
+        elif version == 'dampened':
+            if dampening_factor is None:
+                dampening_factor = self.get_opt_dampening_factor()[0]
+                print(f'Popularity baseline model with dampening_factor: {dampening_factor}')
 
-            # Rank
-            case 'dampened':
-                if dampening_factor is None:
-                    dampening_factor = self.get_opt_dampening_factor()[0]
-                    print(f'Popularity baseline model with dampening_factor: {dampening_factor}')
+            baseline = self.df_train.groupBy('movieId').agg(
+                count('rating').alias('rating_count')
+            ).withColumn(
+                'rating_dampened', col('rating_count') / col('rating_count') + dampening_factor
+            ).orderBy(col('rating_dampened').desc())
 
-                baseline = self.df_train.groupBy('movieId').agg(
-                    count('rating').alias('rating_count')
-                ).withColumn(
-                    'rating_dampened', col('rating_count') / col('rating_count') + dampening_factor
-                ).orderBy(col('rating_dampened').desc())
-
-            case _:
-                raise ValueError("Unsupported version type specified for popularity baseline model")
+        else:
+            raise ValueError("Unsupported version type specified for popularity baseline model")
 
         # Return top N popular movies
         return baseline.limit(self.top_n)
