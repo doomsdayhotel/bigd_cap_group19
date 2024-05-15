@@ -66,19 +66,19 @@ def aggregate_genome_scores(genome_scores, genome_tags):
 
 def process_data(spark):
     base_path = f'hdfs:///user/{os.getenv("USER")}/ml-latest'
-    train_path = f'{base_path}/train_ratings.csv'
-    val_path = f'{base_path}/val_ratings.csv'
-    test_path = f'{base_path}/test_ratings.csv'
-    movies_path = f'{base_path}/movies.csv'
-    genome_scores_path = f'{base_path}/genome-scores.csv'
-    genome_tags_path = f'{base_path}/genome-tags.csv'
+    train_path = f'{base_path}/train_ratings.parquet'
+    val_path = f'{base_path}/val_ratings.parquet'
+    test_path = f'{base_path}/test_ratings.parquet'
+    movies_path = f'{base_path}/movies.parquet'
+    genome_scores_path = f'{base_path}/genome-scores.parquet'
+    genome_tags_path = f'{base_path}/genome-tags.parquet'
     
-    train_ratings = spark.read.csv(train_path, header=True, inferSchema=True)
-    val_ratings = spark.read.csv(val_path, header=True, inferSchema=True)
-    test_ratings = spark.read.csv(test_path, header=True, inferSchema=True)
-    movies = spark.read.csv(movies_path, header=True, inferSchema=True)
-    genome_scores = spark.read.csv(genome_scores_path, header=True, inferSchema=True)
-    genome_tags = spark.read.csv(genome_tags_path, header=True, inferSchema=True)
+    train_ratings = spark.read.parquet(train_path, header=True, inferSchema=True)
+    val_ratings = spark.read.parquet(val_path, header=True, inferSchema=True)
+    test_ratings = spark.read.parquet(test_path, header=True, inferSchema=True)
+    movies = spark.read.parquet(movies_path, header=True, inferSchema=True)
+    genome_scores = spark.read.parquet(genome_scores_path, header=True, inferSchema=True)
+    genome_tags = spark.read.parquet(genome_tags_path, header=True, inferSchema=True)
     
     # Aggregate genome scores to create additional movie features
     movie_features = aggregate_genome_scores(genome_scores, genome_tags)
