@@ -42,8 +42,7 @@ def compute_map(top_genres, ratings, movies, n_recommendations=100):
 
     # top_genre_names_expr = f"array({','.join([f'\"{x}\"' for x in top_genre_names])})"
 
-    top_genre_names_expr = f"array({','.join([f'\\\"{x}\\\"' for x in top_genre_names])})"
-
+    top_genre_names_expr = f"array({','.join(map(lambda x: f'\"{x}\"', top_genre_names))})"
 
 
     
