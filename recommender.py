@@ -31,7 +31,7 @@ class Recommender:
         """
         Train the baseline recommender model.
         """
-        self.poularity_baseline = self.baseline_model.get_baseline()
+        self.poularity_baseline = self.baseline_model.get_baseline(version='weighted')
 
     def train_als(self):
         als = ALS(userCol='userId',
@@ -59,7 +59,7 @@ class Recommender:
         best_model = None
         best_map = -1  # Initializing to a very low value
         for model in models.subModels:
-            top_n_recs = self.predict_top_n(model, n=self.k)
+            top_n_recs = self.predict_top_n(model)
             map_val = self.evaluator.compute_map_at_k(top_n_recs, self.val_df.select('userId', 'movieId'))
             if map_val > best_map:
                 best_map = map_val
@@ -107,7 +107,7 @@ class Recommender:
         Get top N recommendations for each user.
         """
         user_recs = model.recommendForAllUsers(self.k)
-        # Explode the recommendations to make it easier to join with ground truth
+
         user_recs = user_recs.select("userId", explode("recommendations").alias("rec"))
         user_recs = user_recs.select("userId", col("rec.movieId").alias("movieId"), col("rec.rating").alias("rating"))
         return user_recs
@@ -126,23 +126,38 @@ def main(spark, userID, args):
     evaluation_util = EvaluationUtil(spark)
 
     # Popularity baseline model
-    popularity_model = PopularityBaseline(recommender.train_df, recommender.val_df)
-    best_dampening_factor, best_map = popularity_model.get_opt_dampening_factor(dampening_factors=[5, 10, 15, 20])
-    print(f'Best Dampening Factor: {best_dampening_factor}, Best MAP on Validation Set: {best_map}')
+    baseline = PopularityBaseline(spark, recommender.train_df, recommender.val_df, args.top_n)
+    evaluator = EvaluationUtil(spark, args.top_n)
 
-    # Calculate popularity baseline with the best dampening factor
-    popularity_baseline = popularity_model.get_baseline(version='dampened', dampening_factor=best_dampening_factor)
-    popularity_baseline.show(20)
+    # Popularity baselines
+    popularity_baseline_simple = baseline.get_baseline(version='simple')
+    popularity_baseline_simple.show(20)
 
-    # Get top N items
-    top_n_df = popularity_baseline.limit(args.top_n)
+    print(
+        'Evaluation for simple baseline model:',
+        evaluator.evaluate(
+            df_pred=popularity_baseline_simple.select('userId', 'movieId', 'rating'),
+            df_true=recommender.val_df.select('userId', 'movieId', 'rating')))
 
-    # Calculate MAP for validation and test sets
-    map_val = evaluation_util.compute_map_at_k(top_n_df, recommender.val_df.select('userId', 'movieId'))
-    map_test = evaluation_util.compute_map_at_k(top_n_df, recommender.test_df.select('userId', 'movieId'))
+    # Popularity baselines
+    popularity_baseline_weighted = baseline.get_baseline(version='weighted')
+    popularity_baseline_weighted.show(20)
 
-    print(f'Validation Set MAP: {map_val}')
-    print(f'Test Set MAP: {map_test}')
+    print(
+        'Evaluation for weighted baseline model:',
+        evaluator.evaluate(
+            df_pred=popularity_baseline_weighted.select('userId', 'movieId', 'rating'),
+            df_true=recommender.val_df.select('userId', 'movieId', 'rating')))
+
+    # Popularity baselines
+    popularity_baseline_dampened = baseline.get_baseline(version='dampened')
+    popularity_baseline_dampened.show(20)
+
+    print(
+        'Evaluation for dampened baseline model:',
+        evaluator.evaluate(
+            df_pred=popularity_baseline_dampened.select('userId', 'movieId', 'rating'),
+            df_true=recommender.val_df.select('userId', 'movieId', 'rating')))
 
     # Train ALS model
     recommender.train_als()
