@@ -16,7 +16,7 @@ def compute_decay_weighted_popularity(ratings, decay_rate):
     
     # Calculate the age of each rating
     ratings_with_age = ratings.withColumn("age", (current_timestamp - col("timestamp")))
-
+    
     # Apply the exponential decay function
     decay_expr = expr(f"exp(-{decay_rate} * age)").alias("decay_weight")
     ratings_with_decay = ratings_with_age.withColumn("decay_weight", decay_expr)
@@ -48,8 +48,9 @@ def compute_map(top_movies, ratings, n_recommendations=100):
     mean_average_precision = precision_per_user.selectExpr("avg(precision_at_k) as MAP").first()['MAP']
     return mean_average_precision
 
-def process_data(spark, userID):
-    base_path = f'hdfs://{userID}/ml-latest-small'
+def process_data(spark, userID, decay_rate):
+    # Local paths for testing purposes
+    base_path = f'hdfs:///user/{userID}/ml-latest-small'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
@@ -58,21 +59,25 @@ def process_data(spark, userID):
     val_ratings = spark.read.csv(val_path, header=True, inferSchema=True)
     test_ratings = spark.read.csv(test_path, header=True, inferSchema=True)
 
-    # Define decay rate
-    decay_rate = 0.001  # Adjust this parameter based on your dataset
-
     top_movies = compute_decay_weighted_popularity(train_ratings, decay_rate)
     train_map = compute_map(top_movies, train_ratings)
     val_map = compute_map(top_movies, val_ratings)
     test_map = compute_map(top_movies, test_ratings)
     
-    print(f"Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
+    print(f"Decay Rate: {decay_rate} - Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
+    return train_map, val_map, test_map
 
 def main(spark, userID):
-    process_data(spark, userID)
+    decay_rates = [0.001, 0.005, 0.01, 0.02, 0.05]  # Experiment with these values
+    results = {}
+    for decay_rate in decay_rates:
+        results[decay_rate] = process_data(spark, userID, decay_rate)
+
+    # Optionally, print the results or save them for further analysis
+    for decay_rate, (train_map, val_map, test_map) in results.items():
+        print(f"Decay Rate: {decay_rate} - Train MAP: {train_map}, Validation MAP: {val_map}, Test MAP: {test_map}")
 
 if __name__ == "__main__":
     spark = SparkSession.builder.appName('q4_decay_weighted_popularity_model').getOrCreate()
     userID = os.getenv('USER')
     main(spark, userID)
-
