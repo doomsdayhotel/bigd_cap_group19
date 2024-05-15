@@ -65,7 +65,7 @@ def aggregate_genome_scores(genome_scores, genome_tags):
     return movie_features
 
 def process_data(spark):
-    base_path = f'hdfs:///user/{os.getenv("USER")}/ml-latest-small'
+    base_path = f'hdfs:///user/{os.getenv("USER")}/ml-latest'
     train_path = f'{base_path}/train_ratings.csv'
     val_path = f'{base_path}/val_ratings.csv'
     test_path = f'{base_path}/test_ratings.csv'
