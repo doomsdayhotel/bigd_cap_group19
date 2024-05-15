@@ -3,7 +3,7 @@
 
 """
 Usage:
-    $ spark-submit --deploy-mode client rec_sys.py <file_path>
+    $ spark-submit --deploy-mode client rec_sys.py 
 """
 import os
 from pyspark.sql import SparkSession
